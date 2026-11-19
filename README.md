@@ -3,7 +3,7 @@
 **A medication check-in app for people who take many medicines, in English, Arabic and Russian.**
 Before each dose it checks that you are holding the right bottle, by photo or NFC tag. It also explains each medicine in plain language and reads it aloud, and it warns about foods and drinks that clash with your medicines.
 
-**[Live demo →](https://dawa-next-vercel-source-ask-dawa.vercel.app/)** · pick a sample patient, no sign-up
+**[Live demo →](https://wlee19.github.io/dawa/)** · pick a sample patient, no sign-up
 
 ![dawa in English, Arabic and Russian](docs/screenshots/banner.png)
 
@@ -60,7 +60,7 @@ Switch language from the menu at the top of any screen. Each caregiver can choos
 
 Each bottle can carry a cheap NFC sticker (NTAG213/215). Tapping it during check-in confirms you picked up the right medicine.
 
-**You need:** an Android phone, Chrome, NFC turned on, and the app opened over HTTPS (the Vercel link works). iPhone browsers do not support Web NFC, so iPhone users check bottles with a photo instead.
+**You need:** an Android phone, Chrome, NFC turned on, and the app opened over HTTPS (the live demo link works). iPhone browsers do not support Web NFC, so iPhone users check bottles with a photo instead.
 
 1. Open **My medicines → Details** for a medicine and tap **Write to NFC tag**.
 2. Hold a blank sticker against the back of the phone until it says **Tag written**, then stick it on that bottle.
@@ -92,7 +92,7 @@ python3 scripts/nfc_check.py http://localhost:8080/             # end-to-end NFC
 
 ## Deploy
 
-Import the repo into [Vercel](https://vercel.com/new). `vercel.json` already serves `public/` with no build. Any static host works.
+Every push to `main` publishes `public/` to GitHub Pages (`.github/workflows/pages.yml`). For Vercel, import the repo; `vercel.json` already serves `public/` with no build. Any static host works.
 
 ## Project structure
 
