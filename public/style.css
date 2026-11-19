@@ -25,3 +25,15 @@
 .ask-item ul{margin:0 0 10px;padding-inline-start:20px;font-size:calc(15px * var(--scale));line-height:1.5}
 .ask-item .source-button{display:block;text-align:start;color:#2f5f93;text-decoration:underline;margin-top:6px;padding:4px 0}
 
+/* Russian-speaking demo patient */
+.patient-login.olga{background:#e3ebf4;border-color:#c9d7e8}
+.olga .avatar{background:#bfd0e6}
+/* NFC bottle tags */
+.scan-status.waiting{background:#e6eef0;color:var(--ink)}
+.scan-status.waiting b{display:flex;align-items:center;gap:8px}
+.scan-status.waiting .icon{animation:nfc-pulse 1.4s ease-in-out infinite}
+@keyframes nfc-pulse{50%{opacity:.35}}
+[data-motion=reduce] .scan-status.waiting .icon{animation:none}
+@media (prefers-reduced-motion:reduce){.scan-status.waiting .icon{animation:none}}
+.tag-text{display:block;margin:10px 0;padding:12px 14px;border:1px dashed var(--line);border-radius:12px;background:#fbfbf6;font:calc(13px * var(--scale))/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow-wrap:anywhere;user-select:all;text-align:left}
+.section-heading .icon{vertical-align:-3px;margin-inline-end:6px}

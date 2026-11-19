@@ -11,8 +11,8 @@ export const ASK_SOURCES={
 // Two questions that are already answered in the system, for the demo.
 // "this" = the medicine chosen on the page; tapping a sample selects the matching medicine.
 export const SAMPLE_QUESTIONS=[
- {id:'ginseng-warfarin',medId:'warfarin',en:'Can I take ginseng with this?',ar:'هل يمكنني تناول الجينسنغ مع هذا الدواء؟'},
- {id:'grapefruit-simvastatin',medId:'simvastatin',en:'Can I drink grapefruit juice with this?',ar:'هل يمكنني شرب عصير الجريب فروت مع هذا الدواء؟'}
+ {id:'ginseng-warfarin',medId:'warfarin',en:'Can I take ginseng with this?',ar:'هل يمكنني تناول الجينسنغ مع هذا الدواء؟',ru:'Можно ли принимать с этим женьшень?'},
+ {id:'grapefruit-simvastatin',medId:'simvastatin',en:'Can I drink grapefruit juice with this?',ar:'هل يمكنني شرب عصير الجريب فروت مع هذا الدواء؟',ru:'Можно ли пить с этим грейпфрутовый сок?'}
 ];
 
 const CURATED={
@@ -20,24 +20,24 @@ const CURATED={
  'simvastatin|grapefruit':{level:'red',title:'Grapefruit juice and simvastatin',text:'Avoid grapefruit juice while you take simvastatin. The NHS guide lists it as something to avoid, and the FDA names simvastatin as a medicine that can interact with grapefruit.',steps:['Ask your pharmacist if you have already had some.','Do not stop simvastatin on your own.'],sources:['simvastatinFood','citrus']}
 };
 
-// topic -> words people use (English + Arabic) and the matching rule label in medicine-warnings.mjs
+// topic -> words people use (English, Arabic and Russian) and the matching rule label in medicine-warnings.mjs
 const TOPICS=[
- {id:'ginseng',re:/ginseng|panax|جينسنغ|جنسنغ|جينسينغ|جنسينغ/i,herb:true,label:'Ginseng'},
- {id:'grapefruit',re:/grapefruit|pomelo|جريب\s*فروت|جريبفروت|الجريب/i,rule:'Grapefruit juice'},
- {id:'cranberry',re:/cranberr|توت\s*بري/i,rule:'Cranberry juice'},
- {id:'pomegranate',re:/pomegranate|رمان/i,rule:'Pomegranate juice'},
- {id:'alcohol',re:/alcohol|\bbeer\b|\bwine\b|liquor|كحول|نبيذ|بيرة/i,rule:'Alcohol'},
- {id:'greens',re:/spinach|kale|broccoli|leafy|greens|vitamin\s*k\b|سبانخ|ورقية|بروكلي|فيتامين\s*ك/i,rule:'Big changes in leafy greens'},
- {id:'salt',re:/salt\s*substitute|lo-?salt|potassium|بديل\s*الملح|بوتاسيوم/i,rule:'Salt substitutes with potassium'},
- {id:'antacid',re:/antacid|heartburn|tums|maalox|gaviscon|حموضة/i,rule:'Antacids for heartburn'},
- {id:'calcium',re:/calcium|vitamin\s*d\b|كالسيوم|فيتامين\s*د/i,rule:'Extra calcium or vitamin D'}
+ {id:'ginseng',re:/ginseng|panax|جينسنغ|جنسنغ|جينسينغ|جنسينغ|женьшен/i,herb:true,label:'Ginseng'},
+ {id:'grapefruit',re:/grapefruit|pomelo|جريب\s*فروت|جريبفروت|الجريب|грейпфрут/i,rule:'Grapefruit juice'},
+ {id:'cranberry',re:/cranberr|توت\s*بري|клюкв/i,rule:'Cranberry juice'},
+ {id:'pomegranate',re:/pomegranate|رمان|гранат/i,rule:'Pomegranate juice'},
+ {id:'alcohol',re:/alcohol|\bbeer\b|\bwine\b|liquor|كحول|نبيذ|بيرة|алкогол|спиртн|пив[оау]|вин[оау]|водк/i,rule:'Alcohol'},
+ {id:'greens',re:/spinach|kale|broccoli|leafy|greens|vitamin\s*k\b|سبانخ|ورقية|بروكلي|فيتامين\s*ك|шпинат|капуст|брокколи|зелен|витамин\s*[кk]\b/i,rule:'Big changes in leafy greens'},
+ {id:'salt',re:/salt\s*substitute|lo-?salt|potassium|بديل\s*الملح|بوتاسيوم|заменител[ья]\s*соли|кали[йя]/i,rule:'Salt substitutes with potassium'},
+ {id:'antacid',re:/antacid|heartburn|tums|maalox|gaviscon|حموضة|антацид|изжог/i,rule:'Antacids for heartburn'},
+ {id:'calcium',re:/calcium|vitamin\s*d\b|كالسيوم|فيتامين\s*د|кальци|витамин\s*d\b/i,rule:'Extra calcium or vitamin D'}
 ];
-const URGENT=/overdose|took too (much|many)|too many (pills|tablets)|double dose|chest pain|trouble breathing|can'?t breathe|severe bleeding|won'?t stop bleeding|allergic reaction|swollen (face|tongue|lips|throat)|passed out|fainted|جرعة زائدة|ألم في الصدر|ألم الصدر|صعوبة في التنفس|نزيف شديد|تورم الوجه|إغماء/i;
+const URGENT=/overdose|took too (much|many)|too many (pills|tablets)|double dose|chest pain|trouble breathing|can'?t breathe|severe bleeding|won'?t stop bleeding|allergic reaction|swollen (face|tongue|lips|throat)|passed out|fainted|جرعة زائدة|ألم في الصدر|ألم الصدر|صعوبة في التنفس|نزيف شديد|تورم الوجه|إغماء|передозир|слишком много таблеток|боль в груди|трудно дышать|не могу дышать|сильное кровотечение|отёк лица|отек лица|потерял сознание|потеряла сознание|обморок/i;
 const MED_PATTERNS={metformin:/\bmetformin\b/i,lisinopril:/\blisinopril\b/i,vitaminD:/\bvitamin\s*d\s*3\b|\bcholecalciferol\b/i,warfarin:/\bwarfarin\b/i,simvastatin:/\bsimvastatin\b/i,gabapentin:/\bgabapentin\b/i};
 const RANK={grey:1,yellow:2,red:3,urgent:4};
 
 function detectMed(text,meds){
- const hits=meds.filter(m=>MED_PATTERNS[m.id]?.test(text)||(MED_LANG[m.id]?.arName&&text.includes(MED_LANG[m.id].arName)));
+ const lower=text.toLowerCase(),hits=meds.filter(m=>MED_PATTERNS[m.id]?.test(text)||(MED_LANG[m.id]?.arName&&text.includes(MED_LANG[m.id].arName))||(MED_LANG[m.id]?.ruName&&lower.includes(MED_LANG[m.id].ruName.toLowerCase().slice(0,-1))));
  return hits.length===1?hits[0].id:null;
 }
 function itemFor(medId,topic){

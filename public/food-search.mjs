@@ -13,8 +13,8 @@ const aliases={
  hummus:['hummus','houmous','hommus','حمص'],
  grapefruit:['grapefruit juice','عصير الجريب فروت','جريب فروت']
 };
-const foodEntry=food=>({id:food.id,en:food.en,ar:food.ar,foodId:food.id});
-const mealEntry=meal=>({id:meal.id,en:meal.en,ar:meal.ar,foodId:meal.foodId,demoMealId:meal.id});
+const foodEntry=food=>({id:food.id,en:food.en,ar:food.ar,ru:food.ru,foodId:food.id});
+const mealEntry=meal=>({id:meal.id,en:meal.en,ar:meal.ar,ru:meal.ru,foodId:meal.foodId,demoMealId:meal.id});
 function catalogue(){
  const meals=ARABIC_DEMO_MEALS.map(mealEntry),ids=new Set(meals.map(meal=>meal.id));
  return [...meals,...DEMO_FOODS.filter(food=>!ids.has(food.id)).map(foodEntry)];
@@ -23,7 +23,7 @@ export function searchFoods(patientId,query=''){
  const profile=PROFILES.find(patient=>patient.id===patientId);if(!profile)return [];
  const needle=normalise(query);
  if(!needle)return patientId==='amina'?ARABIC_DEMO_MEALS.map(mealEntry):profile.foods.map(id=>DEMO_FOODS.find(food=>food.id===id)).filter(Boolean).map(foodEntry);
- return catalogue().filter(entry=>[entry.en,entry.ar,...(aliases[entry.id]||[])].some(name=>normalise(name).includes(needle)));
+ return catalogue().filter(entry=>[entry.en,entry.ar,entry.ru,...(aliases[entry.id]||[])].some(name=>normalise(name).includes(needle)));
 }
 
 // Add/remove catalogue flow. Profile defaults affect ordering, never another patient's state.

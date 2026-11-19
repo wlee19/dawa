@@ -1,20 +1,22 @@
 import {initialState,normalizeState,checklistRows,localDay,commitChange,toBundle} from './core.mjs';
 export const DEMO_DATE='2026-11-15';
 export const PROFILES=[
- {id:'emma',name:'Emma Wilson',arName:'إيما ويلسون',initials:'EW',language:'en',age:68,foods:['breakfast','rice','fish','spinach'],avoidPork:false,ldl:158},
- {id:'amina',name:'Amina Hassan',arName:'أمينة حسن',initials:'AH',language:'ar',age:68,foods:['rice','lentils','hummus','spinach','fish'],avoidPork:true,ldl:164}
+ {id:'emma',name:'Emma Wilson',arName:'إيما ويلسون',ruName:'Эмма Уилсон',initials:'EW',language:'en',age:68,foods:['breakfast','rice','fish','spinach'],avoidPork:false,ldl:158},
+ {id:'amina',name:'Amina Hassan',arName:'أمينة حسن',ruName:'Амина Хасан',initials:'AH',language:'ar',age:68,foods:['rice','lentils','hummus','spinach','fish'],avoidPork:true,ldl:164},
+ {id:'olga',name:'Olga Ivanova',arName:'أولغا إيفانوفا',ruName:'Ольга Иванова',initials:'ОИ',language:'ru',age:71,foods:['breakfast','lentils','fish','spinach','grapefruit'],avoidPork:false,ldl:171}
 ];
 export const ARABIC_DEMO_MEALS=[
- {id:'hummus',en:'Hummus',ar:'حمص',foodId:'hummus'},
- {id:'baba-ghanoush',en:'Baba ghanoush',ar:'بابا غنوج',foodId:null},
- {id:'kibbeh',en:'Kibbeh',ar:'كبة',foodId:null},
- {id:'shawarmah',en:'Shawarmah',ar:'شاورما',foodId:null},
- {id:'khubz',en:'Khubz',ar:'خبز عربي',foodId:null},
- {id:'labneh',en:'Labneh',ar:'لبنة',foodId:null},
- {id:'tabbouleh',en:'Tabbouleh',ar:'تبولة',foodId:null}
+ {id:'hummus',en:'Hummus',ar:'حمص',ru:'Хумус',foodId:'hummus'},
+ {id:'baba-ghanoush',en:'Baba ghanoush',ar:'بابا غنوج',ru:'Баба гануш',foodId:null},
+ {id:'kibbeh',en:'Kibbeh',ar:'كبة',ru:'Кеббе',foodId:null},
+ {id:'shawarmah',en:'Shawarmah',ar:'شاورما',ru:'Шаурма',foodId:null},
+ {id:'khubz',en:'Khubz',ar:'خبز عربي',ru:'Арабская лепёшка (хубз)',foodId:null},
+ {id:'labneh',en:'Labneh',ar:'لبنة',ru:'Лабне',foodId:null},
+ {id:'tabbouleh',en:'Tabbouleh',ar:'تبولة',ru:'Табуле',foodId:null}
 ];
 export function arabicDemoMeals(){return ARABIC_DEMO_MEALS.map(m=>({id:'demo-amina-'+m.id,demoMealId:m.id,label:m.en,foodId:m.foodId,source:'example'}));}
 export function profileFor(id){return PROFILES.find(p=>p.id===id)||null;}
+export function profileName(profile,lang){return !profile?'':lang==='ar'?profile.arName:lang==='ru'?profile.ruName:profile.name;}
 export function newPatient(id){const profile=profileFor(id);if(!profile)throw new Error('Unknown demo patient.');const p=normalizeState(initialState());return {...p,id,patientLang:profile.language,foods:id==='amina'?['hummus']:[...profile.foods],...(id==='amina'?{foodEntries:arabicDemoMeals(),mealTemplateVersion:2}:{}),avoidPork:profile.avoidPork,consent:false,clock:'08:00',demoDate:DEMO_DATE,liveClock:false,requireBottle:true,bottleChecks:{},skipped:{},caregiver:null,alerts:[],photos:[],mealNote:'',checkWindowMinutes:30};}
 export function restorePatient(raw,id){const base=newPatient(id);if(!raw||raw.id!==id)return base;const mealUpgrade=id==='amina'&&raw.mealTemplateVersion!==2&&!raw.mealEditedAt?{foodEntries:arabicDemoMeals(),foods:['hummus'],mealTemplateVersion:2}:{};return {...base,...normalizeState(raw),...mealUpgrade,id,clock:/^([01]\d|2[0-3]):[0-5]\d$/.test(raw.clock)?raw.clock:base.clock,requireBottle:raw.requireBottle!==false,bottleChecks:raw.bottleChecks||{},skipped:raw.skipped||{},alerts:Array.isArray(raw.alerts)?raw.alerts:[],photos:Array.isArray(raw.photos)?raw.photos:[],caregiver:raw.caregiver||null};}
 export function clockDate(p){if(p.liveClock)return new Date();const [y,m,d]=(p.demoDate||DEMO_DATE).split('-').map(Number),[h,min]=p.clock.split(':').map(Number);return new Date(y,m-1,d,h,min);}
@@ -44,8 +46,19 @@ export function compareBottle(m,result){
  if(!form.test(text))return {status:'unclear',reason:'The tablet or capsule type was not clear.'};
  return {status:'matched',reason:'Label name and strength match.',fingerprint:bottleFingerprint(m)};
 }
-export function nfcTagFor(p,m){return `dawa-demo:v1:${p.id}:${m.id}:${bottleFingerprint(m)}`;}
-export function compareTag(p,m,payload){return payload===nfcTagFor(p,m)?{status:'matched',fingerprint:bottleFingerprint(m),reason:'The tag matches this prescription.'}:{status:'mismatch',reason:'This tag does not match this prescription.'};}
+export const TAG_PREFIX='dawa-demo:v1:';
+export function nfcTagFor(p,m){return `${TAG_PREFIX}${p.id}:${m.id}:${bottleFingerprint(m)}`;}
+// "dawa-demo:v1:<patient>:<medicine>:<fingerprint>" -> parts, or null for anything else.
+export function parseTag(payload){const text=String(payload??'').trim();if(!text.startsWith(TAG_PREFIX))return null;const [patientId,medId,fingerprint,...rest]=text.slice(TAG_PREFIX.length).split(':');return patientId&&medId&&fingerprint&&!rest.length?{patientId,medId,fingerprint}:null;}
+export function compareTag(p,m,payload){
+ const text=String(payload??'').trim();
+ if(text===nfcTagFor(p,m))return {status:'matched',fingerprint:bottleFingerprint(m),reason:'The tag matches this prescription.'};
+ const tag=parseTag(text);
+ if(!tag)return {status:'mismatch',reason:'This is not a dawa bottle tag. Program it from this medicine’s details first.'};
+ if(tag.patientId!==p.id)return {status:'mismatch',reason:'This tag belongs to another patient.'};
+ if(tag.medId!==m.id&&p.meds.some(x=>x.id===tag.medId))return {status:'mismatch',reason:'This tag belongs to another medicine:',otherMedId:tag.medId};
+ return {status:'mismatch',reason:'This tag does not match this prescription.'};
+}
 export function saveBottleCheck(p,key,result,method){const row=doseRows(p).find(r=>r.key===key);if(!row||result.status!=='matched'||result.fingerprint!==bottleFingerprint(row.med)||!['ocr','nfc','demo-nfc'].includes(method))return p;return {...p,bottleChecks:{...p.bottleChecks,[key]:{patientId:p.id,fingerprint:result.fingerprint,method,checkedAt:new Date().toISOString()}}};}
 export function clearBottleCheck(p,key){if(!p.bottleChecks?.[key])return p;const checks={...p.bottleChecks};delete checks[key];return {...p,bottleChecks:checks};}
 export function bottleChecked(p,row){const check=p.bottleChecks?.[row.key];return !!check&&check.patientId===p.id&&check.fingerprint===bottleFingerprint(row.med);}
@@ -54,10 +67,10 @@ function addAlert(p,row,kind,now){if(!p.caregiver?.notify)return p;const id=[row
 export function skipDose(p,key,now=clockDate(p)){const row=doseRows(p,now).find(r=>r.key===key);if(!row||row.checked||row.skipped||row.needsReview)return p;const next={...p,skipped:{...p.skipped,[key]:now.toISOString()}};return addAlert(next,row,'skipped',now);}
 export function syncMissed(p,now=clockDate(p)){let next=p;for(const row of doseRows(p,now))if(timingFor(row,p,now)==='late')next=addAlert(next,row,'not-logged',now);return next;}
 export function setClock(p,clock){if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(clock))return p;return syncMissed({...p,clock,liveClock:false});}
-export function addCaregiver(p,{name,language,notify}){const cleaned=String(name||'').trim().slice(0,60);if(!cleaned)return p;return syncMissed({...p,consent:true,caregiver:{name:cleaned,language:['en','ar'].includes(language)?language:'en',notify:!!notify},alerts:[]});}
+export function addCaregiver(p,{name,language,notify}){const cleaned=String(name||'').trim().slice(0,60);if(!cleaned)return p;return syncMissed({...p,consent:true,caregiver:{name:cleaned,language:['en','ar','ru'].includes(language)?language:'en',notify:!!notify},alerts:[]});}
 export function removeCaregiver(p){return {...p,consent:false,caregiver:null,alerts:[]};}
 export function applyEhrChange(p,action){return commitChange(p,action);}
-export function ehrBundle(p){const profile=profileFor(p.id),bundle=toBundle(p),patientRef='Patient/demo-'+p.id;bundle.entry=bundle.entry.filter(e=>!['RelatedPerson','Consent'].includes(e.resource.resourceType));for(const e of bundle.entry){const r=e.resource;if(r.resourceType==='Patient'){r.id='demo-'+p.id;r.name=[{text:profile.name}];r.communication=[{language:{coding:[{code:profile.language}]},preferred:true}];}if(r.resourceType==='DocumentReference'&&r.id==='demo-diet-note')r.description=p.id==='amina'?ARABIC_DEMO_MEALS.map(m=>m.en).join(', ')+'.':'Breakfast meal, rice, baked fish, cooked spinach.';if(r.subject)r.subject.reference=patientRef;if(r.patient)r.patient.reference=patientRef;}
+export function ehrBundle(p){const profile=profileFor(p.id),bundle=toBundle(p),patientRef='Patient/demo-'+p.id;bundle.entry=bundle.entry.filter(e=>!['RelatedPerson','Consent'].includes(e.resource.resourceType));for(const e of bundle.entry){const r=e.resource;if(r.resourceType==='Patient'){r.id='demo-'+p.id;r.name=[{text:profile.name}];r.communication=[{language:{coding:[{code:profile.language}]},preferred:true}];}if(r.resourceType==='DocumentReference'&&r.id==='demo-diet-note')r.description=p.id==='amina'?ARABIC_DEMO_MEALS.map(m=>m.en).join(', ')+'.':p.id==='olga'?'Breakfast meal, lentil soup, baked fish, cooked spinach. Occasional grapefruit.':'Breakfast meal, rice, baked fish, cooked spinach.';if(r.subject)r.subject.reference=patientRef;if(r.patient)r.patient.reference=patientRef;}
  bundle.entry=bundle.entry.filter(e=>e.resource.id!=='demo-ldl');
  for(const lab of [
  {id:'ldl',name:'LDL cholesterol',value:profile.ldl,unit:'mg/dL',flag:'H',range:'Below 100'},
